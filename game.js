@@ -112,12 +112,13 @@ function create() {
                       {"playerId": playerId,
                        "x": ufo.x,
                        "y": ufo.y,
-                       "angle": ufo.angle});
+                       "angle": ufo.angle,
+                       "character": character});
     }, 200); // Update this to change the delay between triggers in ms
 
     channel.bind('client-pos', function(pos) {
       if (other_ufos[pos['playerId']] == undefined) {
-        var thing = game.add.sprite(pos['x'], pos['y'], 'alive');
+        var thing = game.add.sprite(pos['x'], pos['y'], pos['character']);
         game.physics.enable(thing, Phaser.Physics.ARCADE);
         thing.anchor.setTo(0.5, 0.5);
         thing.body.immovable = true;

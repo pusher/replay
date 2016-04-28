@@ -91,7 +91,7 @@ function create() {
     spawn();
 
     setInterval(function() {
-      channel.trigger('client-pos', {"playerId": playerId, "x": sprite.x, "y": sprite.y, "angle": sprite.angle});
+      channel.trigger('client-pos', {"playerId": playerId, "x": ufo.x, "y": ufo.y, "angle": ufo.angle});
     }, 500); // Update this to change the delay between triggers in ms
 
     channel.bind('client-pos', function(pos) {
@@ -199,7 +199,7 @@ function moveUfo() {
 
 function checkCollisions() {
     game.physics.arcade.collide(ufo, target, win);
-    other_ufos.map(function(other_ufo){
+    Object.keys(other_ufos).map(function(other_ufo){
         game.physics.arcade.collide(ufo, other_ufo, explode);
     });
 }

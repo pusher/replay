@@ -117,6 +117,18 @@ function create() {
     });
 }
 
+function checkOverlap(spriteA, spriteB, f) {
+
+    var boundsA = spriteA.getBounds();
+    var boundsB = spriteB.getBounds();
+
+    if( Phaser.Rectangle.intersects(boundsA, boundsB))
+    {
+        f.call(spriteA, spriteB);
+    }
+
+}
+
 function is_alive(){
     return ufo_state == UfoState.ALIVE;
 }
@@ -203,12 +215,11 @@ function moveUfo() {
 }
 
 function checkCollisions() {
-    game.physics.arcade.collide(ufo, target, win);
+    checkOverlap(ufo, target, win);
     Object.keys(other_ufos).map(function(other_ufo){
-        game.physics.arcade.collide(ufo, other_ufo, explode);
+        checkOverlap(ufo, other_ufos[other_ufo], explode);
     });
 }
-
 
 function render() {
     game.debug.spriteInfo(ufo, 32, 32);

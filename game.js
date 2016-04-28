@@ -74,7 +74,7 @@ function preload() {
     game.load.image('alive', 'assets/sprites/ufo.png');
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/sprites/wizball.png');
-    game.load.image('background', 'assets/landing.jpg');
+    game.load.image('background', 'assets/backgroung.jpg');
     game.load.image('1', 'assets/characters/1.png');
     game.load.image('2', 'assets/characters/2.png');
     game.load.image('3', 'assets/characters/3.png');

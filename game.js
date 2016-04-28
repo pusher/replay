@@ -13,6 +13,16 @@ WorldState = {
     RUNNING: 2
 };
 
+var pusher = new Pusher("<YOUR APP KEY>", {
+  authTransport: 'client',
+  clientAuth: {
+        key: "<YOUR APP KEY>",
+        secret: "<YOUR APP SECRET>"
+      },
+  cluster: 'eu'
+});
+var channel = pusher.subscribe('private-channel');
+
 var game = new Phaser.Game( 800,
                             800,
                             Phaser.CANVAS,
@@ -26,6 +36,7 @@ var ufo;
 var target;
 var ghosts = [];
 var world_state = WorldState.RUNNING;
+var prevEventReceivedAt = 0;
 
 function time_to_end_of_round() {
     var extra = Math.floor(world_time() % (ROUND_LENGTH + RECOVERY_TIME));
@@ -51,11 +62,11 @@ function world_round() {
     return Math.floor(world_time() / (ROUND_LENGTH + RECOVERY_TIME));
 }
 
+var playerId = Math.random().toString(36).substring(7);
 
 var ufo_state = UfoState.DEAD;
 var speed = 4;
-var other_ufos_coords = [{x: 200, y: 500}, {x: 450, y: 400}];
-var other_ufos = [];
+var other_ufos = {};
 
 function preload() {
     game.world.setBounds(0, 0, 800, 800);
@@ -72,23 +83,30 @@ function create() {
     game.physics.enable(target, Phaser.Physics.ARCADE);
     target.body.immovable = true;
 
-    other_ufos = other_ufos_coords.map (function(pos, n) {
-                return game.add.sprite(pos.x, pos.y, 'alive');
-            });
-
-
     ufo = game.add.sprite(850, 850, 'alive');
     ufo.anchor.setTo(0.5, 0.5);
 
     game.physics.enable(ufo, Phaser.Physics.ARCADE);
-    other_ufos.map(function(other_ufo){
-        game.physics.enable(other_ufo, Phaser.Physics.ARCADE);
-        other_ufo.body.immovable = true;
-    });
 
     spawn();
-}
 
+    setInterval(function() {
+      channel.trigger('client-pos', {"playerId": playerId, "x": sprite.x, "y": sprite.y, "angle": sprite.angle});
+    }, 500); // Update this to change the delay between triggers in ms
+
+    channel.bind('client-pos', function(pos) {
+      if (other_ufos[pos['playerId']] == undefined) {
+        other_ufos[pos['playerId']] = game.add.sprite(pos['x'], pos['y'], 'ship');
+      } else {
+        var now = game.time.now
+        tween = game.add.tween(other_ufos[pos['playerId']]);
+        tween.to({'x': pos['x'], 'y': pos['y'], 'angle': pos['angle']}, now - prevEventReceivedAt);
+        tween.start();
+
+        prevEventReceivedAt = now
+      }
+    });
+}
 
 function is_alive(){
     return ufo_state == UfoState.ALIVE;

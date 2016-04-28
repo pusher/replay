@@ -100,7 +100,7 @@ function create() {
                        "x": ufo.x,
                        "y": ufo.y,
                        "angle": ufo.angle});
-    }, 2000); // Update this to change the delay between triggers in ms
+    }, 200); // Update this to change the delay between triggers in ms
 
     channel.bind('client-pos', function(pos) {
       if (other_ufos[pos['playerId']] == undefined) {

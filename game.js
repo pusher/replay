@@ -73,10 +73,13 @@ function preload() {
     game.load.image('alive', 'assets/sprites/ufo.png');
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/sprites/wizball.png');
+    game.load.image('background', 'assets/landing.jpg');
 }
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
     target = game.add.sprite(400, 400, 'target');
     target.anchor.setTo(0.5, 0.5);

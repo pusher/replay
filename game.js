@@ -134,17 +134,22 @@ function create() {
       }
     });
 
-    channel.bind('client-die', function(pos){
+    channel.bind('client-explode', function(pos){
         var player_id = pos['playerId'];
 
         Object.keys(other_ufos).map(function(other_ufo){
             other_ufos[player_id].destroy();
         });
+    });
 
-    }
 
+    channel.bind('client-win', function(pos){
+        var player_id = pos['playerId'];
 
-    );
+        Object.keys(other_ufos).map(function(other_ufo){
+            other_ufos[player_id].destroy();
+        });
+    });
 }
 
 function checkOverlap(spriteA, spriteB, f) {
@@ -172,8 +177,6 @@ function explode(){
 }
 
 function die(){
-    channel.trigger('client-die',
-            {"playerId": playerId});
     ufo_state = UfoState.DEAD;
     var ghost_x = ufo.x;
     var ghost_y = ufo.y;

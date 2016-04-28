@@ -32,6 +32,8 @@ var game = new Phaser.Game( 800,
                                 update: update,
                                 render: render });
 
+game.stage.disableVisibilityChange = true;
+
 var ufo;
 var target;
 var ghosts = [];

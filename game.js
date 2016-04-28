@@ -22,6 +22,7 @@ var pusher = new Pusher("<YOUR APP KEY>", {
   cluster: 'eu'
 });
 var channel = pusher.subscribe('private-channel');
+var character = '1';
 
 var game = new Phaser.Game( 800,
                             800,
@@ -74,9 +75,21 @@ function preload() {
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/sprites/wizball.png');
     game.load.image('background', 'assets/landing.jpg');
+    game.load.image('1', 'assets/characters/1.png');
+    game.load.image('2', 'assets/characters/2.png');
+    game.load.image('3', 'assets/characters/3.png');
+    game.load.image('4', 'assets/characters/4.png');
+    game.load.image('5', 'assets/characters/5.png');
+    game.load.image('6', 'assets/characters/6.png');
+    game.load.image('7', 'assets/characters/7.png');
+    game.load.image('8', 'assets/characters/8.png');
+    game.load.image('9', 'assets/characters/9.png');
 }
 
 function create() {
+
+    character = location.search.split('character=')[1] || character;
+
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     game.add.tileSprite(0, 0, game.width, game.height, 'background');
@@ -86,7 +99,7 @@ function create() {
     game.physics.enable(target, Phaser.Physics.ARCADE);
     target.body.immovable = true;
 
-    ufo = game.add.sprite(850, 850, 'alive');
+    ufo = game.add.sprite(850, 850, character);
     ufo.anchor.setTo(0.5, 0.5);
 
     game.physics.enable(ufo, Phaser.Physics.ARCADE);
@@ -161,7 +174,7 @@ function spawn(){
     var x = 400 + r * Math.cos(angle);
     var y = 400 + r * Math.sin(angle);
 
-    ufo.loadTexture('alive');
+    ufo.loadTexture(character);
     ufo.alpha = 1;
     ufo.x = x;
     ufo.y = y;

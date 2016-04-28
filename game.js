@@ -32,7 +32,6 @@ var game = new Phaser.Game( 800,
                                 update: update,
                                 render: render });
 
-
 var ufo;
 var target;
 var ghosts = [];
@@ -93,15 +92,21 @@ function create() {
     spawn();
 
     setInterval(function() {
-      channel.trigger('client-pos', {"playerId": playerId, "x": ufo.x, "y": ufo.y, "angle": ufo.angle});
-    }, 500); // Update this to change the delay between triggers in ms
+      channel.trigger('client-pos',
+                      {"playerId": playerId,
+                       "x": ufo.x,
+                       "y": ufo.y,
+                       "angle": ufo.angle});
+    }, 2000); // Update this to change the delay between triggers in ms
 
     channel.bind('client-pos', function(pos) {
       if (other_ufos[pos['playerId']] == undefined) {
-        other_ufos[pos['playerId']] = game.add.sprite(pos['x'], pos['y'], 'ship');
+        other_ufos[pos['playerId']] = game.add.sprite(pos['x'], pos['y'], 'alive');
+        game.physics.enable(other_ufos[pos['playerId']], Phaser.Physics.ARCADE);
+        other_ufos[pos['playerId']].body.immovable = true;
       } else {
         var now = game.time.now
-        tween = game.add.tween(other_ufos[pos['playerId']]);
+        var tween = game.add.tween(other_ufos[pos['playerId']]);
         tween.to({'x': pos['x'], 'y': pos['y'], 'angle': pos['angle']}, now - prevEventReceivedAt);
         tween.start();
 
@@ -118,12 +123,10 @@ function explode(){
     ufo_state = UfoState.DYING;
     ufo.loadTexture('dying');
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
-    //tween.onComplete.add(die, this);
 }
 
 function die(){
     ufo_state = UfoState.DEAD;
-    //game.time.events.add(Phaser.Timer.SECOND, spawn, this);
     var ghost_x = ufo.x;
     var ghost_y = ufo.y;
 }
@@ -131,7 +134,6 @@ function die(){
 function win(){
     ufo_state = UfoState.WINNING;
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
-    //tween.onComplete.add(spawn, this);
 }
 
 function spawn(){
@@ -142,7 +144,6 @@ function spawn(){
     var x = 400 + r * Math.cos(angle);
     var y = 400 + r * Math.sin(angle);
 
-    console.log('spawning ufo');
     ufo.loadTexture('alive');
     ufo.alpha = 1;
     ufo.x = x;

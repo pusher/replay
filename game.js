@@ -32,7 +32,6 @@ var game = new Phaser.Game( 800,
                                 update: update,
                                 render: render });
 
-game.stage.disableVisibilityChange = true;
 
 var ufo;
 var target;
@@ -89,6 +88,7 @@ function create() {
     ufo.anchor.setTo(0.5, 0.5);
 
     game.physics.enable(ufo, Phaser.Physics.ARCADE);
+    game.stage.disableVisibilityChange = true;
 
     spawn();
 

@@ -1,5 +1,6 @@
 const ROUND_LENGTH = 17;
 const RECOVERY_TIME = 3;
+replay_toggle = false;
 
 UfoState = {
     ALIVE: 0,
@@ -132,6 +133,18 @@ function create() {
         prevEventReceivedAt = now
       }
     });
+
+    channel.bind('client-die', function(pos){
+        var player_id = pos['playerId'];
+
+        Object.keys(other_ufos).map(function(other_ufo){
+            other_ufos[player_id].destroy();
+        });
+
+    }
+
+
+    );
 }
 
 function checkOverlap(spriteA, spriteB, f) {
@@ -151,23 +164,31 @@ function is_alive(){
 }
 
 function explode(){
+    channel.trigger('client-explode',
+            {"playerId": playerId});
     ufo_state = UfoState.DYING;
     ufo.loadTexture('dying');
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
 }
 
 function die(){
+    channel.trigger('client-die',
+            {"playerId": playerId});
     ufo_state = UfoState.DEAD;
     var ghost_x = ufo.x;
     var ghost_y = ufo.y;
 }
 
 function win(){
+    channel.trigger('client-win',
+            {"playerId": playerId});
     ufo_state = UfoState.WINNING;
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
 }
 
 function spawn(){
+    channel.trigger('client-spawn',
+            {"playerId": playerId});
     var r = 200 + Math.random() * 200 ;
     var angle = Math.random() * (2 * Math.PI);
 
@@ -204,7 +225,6 @@ function update_recovery(){
 }
 
 function update() {
-
     if(world_state == WorldState.RUNNING) {
         update_running();
     } else {
@@ -239,6 +259,7 @@ function checkCollisions() {
 }
 
 function render() {
+    if(!replay_toggle) { return ;}
     game.debug.spriteInfo(ufo, 32, 32);
     game.debug.text(ufo_state, 100, 400);
     game.debug.text(world_time(), 100, 420);

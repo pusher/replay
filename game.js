@@ -101,9 +101,11 @@ function create() {
 
     channel.bind('client-pos', function(pos) {
       if (other_ufos[pos['playerId']] == undefined) {
-        other_ufos[pos['playerId']] = game.add.sprite(pos['x'], pos['y'], 'alive');
-        game.physics.enable(other_ufos[pos['playerId']], Phaser.Physics.ARCADE);
-        other_ufos[pos['playerId']].body.immovable = true;
+        var thing = game.add.sprite(pos['x'], pos['y'], 'alive');
+        game.physics.enable(thing, Phaser.Physics.ARCADE);
+        thing.anchor.setTo(0.5, 0.5);
+        thing.body.immovable = true;
+        other_ufos[pos['playerId']] = thing;
       } else {
         var now = game.time.now
         var tween = game.add.tween(other_ufos[pos['playerId']]);

@@ -1,6 +1,7 @@
-const ROUND_LENGTH = 17;
+const ROUND_LENGTH = 20;
 const RECOVERY_TIME = 3;
 replay_toggle = false;
+const CHAR_SCALE = 0.3;
 
 UfoState = {
     ALIVE: 0,
@@ -25,8 +26,8 @@ var pusher = new Pusher("<YOUR APP KEY>", {
 var channel = pusher.subscribe('private-channel');
 var character = '1';
 
-var game = new Phaser.Game( 800,
-                            800,
+var game = new Phaser.Game( 900,
+                            600,
                             Phaser.CANVAS,
                             'phaser-example',
                             {   preload: preload,
@@ -71,7 +72,7 @@ var speed = 4;
 var other_ufos = {};
 
 function preload() {
-    game.world.setBounds(0, 0, 800, 800);
+    game.world.setBounds(0, 0, 1200, 600);
     game.load.image('alive', 'assets/sprites/ufo.png');
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/sprites/wizball.png');
@@ -95,13 +96,15 @@ function create() {
 
     game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
-    target = game.add.sprite(400, 400, 'target');
-    target.anchor.setTo(0.5, 0.5);
+    target = game.add.sprite(800, 300, 'target');
+    target.anchor.setTo(CHAR_SCALE, CHAR_SCALE);
     game.physics.enable(target, Phaser.Physics.ARCADE);
     target.body.immovable = true;
 
     ufo = game.add.sprite(850, 850, character);
     ufo.anchor.setTo(0.5, 0.5);
+    ufo.collideWorldBounds = true;
+    ufo.scale.setTo(CHAR_SCALE, CHAR_SCALE);
 
     game.physics.enable(ufo, Phaser.Physics.ARCADE);
     game.stage.disableVisibilityChange = true;
@@ -109,25 +112,25 @@ function create() {
     spawn();
 
     setInterval(function() {
-      channel.trigger('client-pos',
+      channel.trigger('client-move',
                       {"playerId": playerId,
                        "x": ufo.x,
                        "y": ufo.y,
-                       "angle": ufo.angle,
                        "character": character});
     }, 200); // Update this to change the delay between triggers in ms
 
-    channel.bind('client-pos', function(pos) {
+    channel.bind('client-move', function(pos) {
       if (other_ufos[pos['playerId']] == undefined) {
         var thing = game.add.sprite(pos['x'], pos['y'], pos['character']);
+        thing.scale.setTo(CHAR_SCALE, CHAR_SCALE);
         game.physics.enable(thing, Phaser.Physics.ARCADE);
         thing.anchor.setTo(0.5, 0.5);
-        thing.body.immovable = true;
+        //thing.body.immovable = true;
         other_ufos[pos['playerId']] = thing;
       } else {
         var now = game.time.now
         var tween = game.add.tween(other_ufos[pos['playerId']]);
-        tween.to({'x': pos['x'], 'y': pos['y'], 'angle': pos['angle']}, now - prevEventReceivedAt);
+        tween.to({'x': pos['x'], 'y': pos['y']}, now - prevEventReceivedAt);
         tween.start();
 
         prevEventReceivedAt = now
@@ -192,12 +195,9 @@ function win(){
 function spawn(){
     channel.trigger('client-spawn',
             {"playerId": playerId});
-    var r = 200 + Math.random() * 200 ;
-    var angle = Math.random() * (2 * Math.PI);
 
-
-    var x = 400 + r * Math.cos(angle);
-    var y = 400 + r * Math.sin(angle);
+    var x = game.rnd.realInRange(0, 200);
+    var y = game.rnd.realInRange(200, 400);
 
     ufo.loadTexture(character);
     ufo.alpha = 1;
@@ -257,7 +257,7 @@ function moveUfo() {
 function checkCollisions() {
     checkOverlap(ufo, target, win);
     Object.keys(other_ufos).map(function(other_ufo){
-        checkOverlap(ufo, other_ufos[other_ufo], explode);
+        game.physics.arcade.collide(ufo, other_ufos[other_ufo], function() { return ; });
     });
 }
 

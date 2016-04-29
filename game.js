@@ -84,7 +84,7 @@ function preload() {
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/clock/1.png');
     game.load.image('target_hand', 'assets/clock/2.png');
-    game.load.image('background', 'assets/background_very_final.jpg');
+    game.load.image('background', 'assets/background_fff.jpg');
     game.load.image('1', 'assets/characters/1.png');
     game.load.image('2', 'assets/characters/2.png');
     game.load.image('3', 'assets/characters/3.png');

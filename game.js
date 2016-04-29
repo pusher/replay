@@ -1,4 +1,4 @@
-const ROUND_LENGTH = 20;
+const ROUND_LENGTH = 11;
 const RECOVERY_TIME = 3;
 replay_toggle = false;
 const CHAR_SCALE = 0.3;
@@ -84,7 +84,7 @@ function preload() {
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/clock/1.png');
     game.load.image('target_hand', 'assets/clock/2.png');
-    game.load.image('background', 'assets/background_final.png');
+    game.load.image('background', 'assets/background_very_final.jpg');
     game.load.image('1', 'assets/characters/1.png');
     game.load.image('2', 'assets/characters/2.png');
     game.load.image('3', 'assets/characters/3.png');
@@ -126,12 +126,12 @@ function create() {
     grid = game.add.sprite(game.width/2, game.height/2, 'background');
     grid.anchor.setTo(0.5, 0.5);
 
-    ufo = game.add.sprite(450, 300, character);
+    ufo = game.add.sprite(10, 300, character);
     ufo.anchor.setTo(0.5, 0.5);
     ufo.collideWorldBounds = true;
     ufo.scale.setTo(CHAR_SCALE, CHAR_SCALE);
 
-    game.physics.p2.enable([grid, ufo], true);
+    game.physics.p2.enable([grid, ufo]);
 
     grid.body.clearShapes();
     grid.body.loadPolygon('physicsData', 'background');

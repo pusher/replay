@@ -43,6 +43,7 @@ var target_hand;
 var ghosts = [];
 var world_state = WorldState.RUNNING;
 var prevEventReceivedAt = 0;
+var out_of_time;
 
 function time_to_end_of_round() {
     var extra = Math.floor(world_time() % (ROUND_LENGTH + RECOVERY_TIME));
@@ -90,6 +91,7 @@ function preload() {
     game.load.image('7', 'assets/characters/7.png');
     game.load.image('8', 'assets/characters/8.png');
     game.load.image('9', 'assets/characters/9.png');
+    game.load.bitmapFont('carrier_command', 'assets/fonts/carrier_command.png', 'assets/fonts/carrier_command.xml');
 }
 
 function trigger(type){
@@ -112,13 +114,18 @@ function getUrlVars() {
 
 function create() {
 
-    //character = location.search.split('character=')[1] || character;
     character = getUrlVars()['character'] || character;
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
+    game.physics.startSystem(Phaser.Physics.P2JS);
 
     grid = game.add.sprite(game.width/2, game.height/2, 'background');
     grid.anchor.setTo(0.5, 0.5);
+
+    //game.physics.p2.enable(grid);
+
+    //grid.body.clearShapes();
+    //grid.body.loadPolygon('physicsData', 'background');
 
     target = game.add.sprite(800, 300, 'target');
     target_hand = game.add.sprite(800, 300, 'target_hand');
@@ -233,6 +240,8 @@ function update_running(){
     if(time_to_end_of_round() == 0){
         world_state = WorldState.RECOVERY;
         explode();
+        out_of_time = game.add.bitmapText(450, 300, 'carrier_command', 'OUT OF TIME!', 34);
+        out_of_time.anchor.setTo(0.5, 0.5);
         return;
     }
 
@@ -246,6 +255,7 @@ function update_recovery(){
     if(time_to_start_of_round() == 0){
         world_state = WorldState.RUNNING;
         spawn();
+        out_of_time.destroy();
         return;
     }
 }

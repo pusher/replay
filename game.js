@@ -15,6 +15,7 @@ WorldState = {
     RUNNING: 2
 };
 
+var grid;
 var channel_name = getUrlVars()['channel'] || 'channel';
 var pusher = new Pusher("<YOUR APP KEY>", {
   authTransport: 'client',
@@ -79,7 +80,7 @@ function preload() {
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/clock/1.png');
     game.load.image('target_hand', 'assets/clock/2.png');
-    game.load.image('background', 'assets/big_grid.jpg');
+    game.load.image('background', 'assets/background_op.png');
     game.load.image('1', 'assets/characters/1.png');
     game.load.image('2', 'assets/characters/2.png');
     game.load.image('3', 'assets/characters/3.png');
@@ -116,7 +117,8 @@ function create() {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    game.add.tileSprite(0, 0, game.width, game.height, 'background');
+    grid = game.add.sprite(game.width/2, game.height/2, 'background');
+    grid.anchor.setTo(0.5, 0.5);
 
     target = game.add.sprite(800, 300, 'target');
     target_hand = game.add.sprite(800, 300, 'target_hand');
@@ -218,7 +220,7 @@ function spawn(){
     trigger('client-spawn');
 
     var x = game.rnd.realInRange(10, 50);
-    var y = game.rnd.realInRange(200, 400);
+    var y = game.rnd.realInRange(0, 600);
 
     ufo.loadTexture(character);
     ufo.alpha = 1;

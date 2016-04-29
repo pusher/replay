@@ -39,6 +39,8 @@ var game = new Phaser.Game( 900,
 
 var ufo;
 var target;
+var clock;
+var clock_hand;
 var target_hand;
 var ghosts = [];
 var world_state = WorldState.RUNNING;
@@ -82,7 +84,7 @@ function preload() {
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
     game.load.image('target', 'assets/clock/1.png');
     game.load.image('target_hand', 'assets/clock/2.png');
-    game.load.image('background', 'assets/background_op.png');
+    game.load.image('background', 'assets/background_final.png');
     game.load.image('1', 'assets/characters/1.png');
     game.load.image('2', 'assets/characters/2.png');
     game.load.image('3', 'assets/characters/3.png');
@@ -93,6 +95,7 @@ function preload() {
     game.load.image('8', 'assets/characters/8.png');
     game.load.image('9', 'assets/characters/9.png');
     game.load.bitmapFont('carrier_command', 'assets/fonts/carrier_command.png', 'assets/fonts/carrier_command.xml');
+    game.load.physics('physicsData', 'assets/physics.json');
 }
 
 function trigger(type){
@@ -123,22 +126,30 @@ function create() {
     grid = game.add.sprite(game.width/2, game.height/2, 'background');
     grid.anchor.setTo(0.5, 0.5);
 
-    //game.physics.p2.enable(grid);
+    ufo = game.add.sprite(450, 300, character);
+    ufo.anchor.setTo(0.5, 0.5);
+    ufo.collideWorldBounds = true;
+    ufo.scale.setTo(CHAR_SCALE, CHAR_SCALE);
 
-    //grid.body.clearShapes();
-    //grid.body.loadPolygon('physicsData', 'background');
+    game.physics.p2.enable([grid, ufo], true);
 
-    target = game.add.sprite(800, 300, 'target');
-    target_hand = game.add.sprite(800, 300, 'target_hand');
+    grid.body.clearShapes();
+    grid.body.loadPolygon('physicsData', 'background');
+    grid.body.kinematic = true;
+
+    target = game.add.sprite(900, 300, 'target');
+    target_hand = game.add.sprite(900, 300, 'target_hand');
+    target.alpha = 0
+    target_hand.alpha = 0
     target.anchor.setTo(0.5, 0.5);
     target_hand.anchor.setTo(0.5, 0.5);
     game.physics.enable(target, Phaser.Physics.ARCADE);
     target.body.immovable = true;
 
-    ufo = game.add.sprite(850, 850, character);
-    ufo.anchor.setTo(0.5, 0.5);
-    ufo.collideWorldBounds = true;
-    ufo.scale.setTo(CHAR_SCALE, CHAR_SCALE);
+    clock = game.add.sprite(800, 530, 'target');
+    clock_hand = game.add.sprite(800, 530, 'target_hand');
+    clock.anchor.setTo(0.5, 0.5);
+    clock_hand.anchor.setTo(0.5, 0.5);
 
     game.physics.enable(ufo, Phaser.Physics.ARCADE);
     game.stage.disableVisibilityChange = true;
@@ -231,12 +242,12 @@ function spawn(){
     trigger('client-spawn');
 
     var x = game.rnd.realInRange(10, 50);
-    var y = game.rnd.realInRange(0, 600);
+    var y = game.rnd.realInRange(50, 550);
 
     ufo.loadTexture(character);
     ufo.alpha = 1;
-    ufo.x = x;
-    ufo.y = y;
+    ufo.body.x = x;
+    ufo.body.y = y;
     ufo_state = UfoState.ALIVE;
 }
 
@@ -265,7 +276,7 @@ function update_recovery(){
 }
 
 function update() {
-    target_hand.angle = 360 - 360 * (time_to_end_of_round() / ROUND_LENGTH);
+    clock_hand.angle = 360 - 360 * (time_to_end_of_round() / ROUND_LENGTH);
     if(world_state == WorldState.RUNNING) {
         update_running();
     } else {
@@ -276,19 +287,19 @@ function update() {
 function moveUfo() {
     if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
     {
-        ufo.body.x -= speed;
+        ufo.body.velocity.x -= speed;
     }
     else if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
     {
-        ufo.body.x += speed;
+        ufo.body.velocity.x += speed;
     }
     if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
     {
-        ufo.body.y -= speed;
+        ufo.body.velocity.y -= speed;
     }
     if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
     {
-        ufo.body.y += speed;
+        ufo.body.velocity.y += speed;
     }
 }
 
@@ -297,6 +308,7 @@ function checkCollisions() {
     Object.keys(other_ufos).map(function(other_ufo){
         game.physics.arcade.collide(ufo, other_ufos[other_ufo], function() { return ; });
     });
+
 }
 
 function render() {

@@ -15,6 +15,7 @@ WorldState = {
     RUNNING: 2
 };
 
+var channel_name = getUrlVars()['channel'] || 'channel';
 var pusher = new Pusher("<YOUR APP KEY>", {
   authTransport: 'client',
   clientAuth: {
@@ -23,7 +24,7 @@ var pusher = new Pusher("<YOUR APP KEY>", {
       },
   cluster: 'eu'
 });
-var channel = pusher.subscribe('private-channel');
+var channel = pusher.subscribe('private-' + channel_name);
 var character = '1';
 
 var game = new Phaser.Game( 900,
@@ -37,6 +38,7 @@ var game = new Phaser.Game( 900,
 
 var ufo;
 var target;
+var target_hand;
 var ghosts = [];
 var world_state = WorldState.RUNNING;
 var prevEventReceivedAt = 0;
@@ -75,7 +77,8 @@ function preload() {
     game.world.setBounds(0, 0, 1200, 600);
     game.load.image('alive', 'assets/sprites/ufo.png');
     game.load.image('dying', 'assets/sprites/yellow_ball.png');
-    game.load.image('target', 'assets/sprites/wizball.png');
+    game.load.image('target', 'assets/clock/1.png');
+    game.load.image('target_hand', 'assets/clock/2.png');
     game.load.image('background', 'assets/big_grid.jpg');
     game.load.image('1', 'assets/characters/1.png');
     game.load.image('2', 'assets/characters/2.png');
@@ -88,16 +91,37 @@ function preload() {
     game.load.image('9', 'assets/characters/9.png');
 }
 
+function trigger(type){
+    channel.trigger(type, {
+        "playerId": playerId,
+        "x": ufo.x,
+        "y": ufo.y,
+        "character": character
+    });
+}
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,
+            function(m,key,value) {
+                vars[key] = value;
+            });
+    return vars;
+}
+
 function create() {
 
-    character = location.search.split('character=')[1] || character;
+    //character = location.search.split('character=')[1] || character;
+    character = getUrlVars()['character'] || character;
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     game.add.tileSprite(0, 0, game.width, game.height, 'background');
 
     target = game.add.sprite(800, 300, 'target');
-    target.anchor.setTo(CHAR_SCALE, CHAR_SCALE);
+    target_hand = game.add.sprite(800, 300, 'target_hand');
+    target.anchor.setTo(0.5, 0.5);
+    target_hand.anchor.setTo(0.5, 0.5);
     game.physics.enable(target, Phaser.Physics.ARCADE);
     target.body.immovable = true;
 
@@ -112,47 +136,47 @@ function create() {
     spawn();
 
     setInterval(function() {
-      channel.trigger('client-move',
-                      {"playerId": playerId,
-                       "x": ufo.x,
-                       "y": ufo.y,
-                       "character": character});
+      if(is_alive()){
+          trigger('client-move');
+      }
     }, 200); // Update this to change the delay between triggers in ms
 
     channel.bind('client-move', function(pos) {
-      if (other_ufos[pos['playerId']] == undefined) {
-        var thing = game.add.sprite(pos['x'], pos['y'], pos['character']);
-        thing.scale.setTo(CHAR_SCALE, CHAR_SCALE);
-        game.physics.enable(thing, Phaser.Physics.ARCADE);
-        thing.anchor.setTo(0.5, 0.5);
-        //thing.body.immovable = true;
-        other_ufos[pos['playerId']] = thing;
-      } else {
-        var now = game.time.now
-        var tween = game.add.tween(other_ufos[pos['playerId']]);
+        var player_id = pos['playerId'];
+        check_ufo_exists(pos);
+        var now = game.time.now;
+        var tween = game.add.tween(other_ufos[player_id]);
         tween.to({'x': pos['x'], 'y': pos['y']}, now - prevEventReceivedAt);
         tween.start();
 
         prevEventReceivedAt = now
-      }
     });
 
     channel.bind('client-explode', function(pos){
+        check_ufo_exists(pos);
         var player_id = pos['playerId'];
-
-        Object.keys(other_ufos).map(function(other_ufo){
-            other_ufos[player_id].destroy();
-        });
+        other_ufos[player_id].destroy();
+        delete other_ufos[player_id];
     });
 
 
     channel.bind('client-win', function(pos){
+        check_ufo_exists(pos);
         var player_id = pos['playerId'];
-
-        Object.keys(other_ufos).map(function(other_ufo){
-            other_ufos[player_id].destroy();
-        });
+        other_ufos[player_id].destroy();
+        delete other_ufos[player_id];
     });
+}
+
+function check_ufo_exists(obj){
+    var player_id = obj['playerId'];
+    if (other_ufos[player_id] == undefined) {
+        var thing = game.add.sprite(obj['x'], obj['y'], obj['character']);
+        thing.scale.setTo(CHAR_SCALE, CHAR_SCALE);
+        game.physics.enable(thing, Phaser.Physics.ARCADE);
+        thing.anchor.setTo(0.5, 0.5);
+        other_ufos[player_id] = thing;
+    }
 }
 
 function checkOverlap(spriteA, spriteB, f) {
@@ -172,8 +196,7 @@ function is_alive(){
 }
 
 function explode(){
-    channel.trigger('client-explode',
-            {"playerId": playerId});
+    trigger('client-explode');
     ufo_state = UfoState.DYING;
     ufo.loadTexture('dying');
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
@@ -186,17 +209,15 @@ function die(){
 }
 
 function win(){
-    channel.trigger('client-win',
-            {"playerId": playerId});
+    trigger('client-win');
     ufo_state = UfoState.WINNING;
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
 }
 
 function spawn(){
-    channel.trigger('client-spawn',
-            {"playerId": playerId});
+    trigger('client-spawn');
 
-    var x = game.rnd.realInRange(0, 200);
+    var x = game.rnd.realInRange(10, 50);
     var y = game.rnd.realInRange(200, 400);
 
     ufo.loadTexture(character);
@@ -228,6 +249,7 @@ function update_recovery(){
 }
 
 function update() {
+    target_hand.angle = 360 - 360 * (time_to_end_of_round() / ROUND_LENGTH);
     if(world_state == WorldState.RUNNING) {
         update_running();
     } else {

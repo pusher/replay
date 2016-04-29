@@ -44,6 +44,7 @@ var ghosts = [];
 var world_state = WorldState.RUNNING;
 var prevEventReceivedAt = 0;
 var out_of_time;
+var win_text;
 
 function time_to_end_of_round() {
     var extra = Math.floor(world_time() % (ROUND_LENGTH + RECOVERY_TIME));
@@ -221,6 +222,9 @@ function win(){
     trigger('client-win');
     ufo_state = UfoState.WINNING;
     var tween = game.add.tween(ufo).to( {alpha: 0}, 500, "Linear", true);
+    win_text = game.add.bitmapText(450, 350, 'carrier_command', 'GOOD JOB!', 34);
+    win_text.anchor.setTo(0.5, 0.5);
+    game.time.events.add(Phaser.Timer.SECOND * 3, function() {win_text.destroy();}, this);
 }
 
 function spawn(){
